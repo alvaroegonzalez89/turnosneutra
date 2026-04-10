@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEUTRA — Reserva de Turnos</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00BFFF;
+    --cyan-dark: #0099CC;
+    --cyan-light: #e0f7ff;
+    --cyan-ultra: #f0fbff;
+    --gris: #6d6e71;
+    --gris-oscuro: #3a3a3a;
+    --gris-claro: #f5f5f5;
+    --blanco: #ffffff;
+    --negro: #1a1a1a;
+    --sombra: 0 4px 24px rgba(0,191,255,0.10);
+    --sombra-hover: 0 8px 32px rgba(0,191,255,0.22);
+    --rojo: #e53e3e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: #f8fbfe;
+    color: var(--negro);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: white;
+    border-bottom: 3px solid var(--cyan);
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,191,255,0.08);
+  }
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+  }
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-svg {
+    width: 48px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+  .logo-text .nombre {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .logo-text .nombre span.neu { color: var(--cyan); }
+  .logo-text .nombre span.tra { color: var(--gris); }
+  .logo-text .subtitulo {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gris);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .header-badge {
+    background: var(--cyan-light);
+    color: var(--cyan-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--cyan);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--cyan-dark) 0%, var(--cyan) 50%, #33ccff 100%);
+    color: white;
+    padding: 56px 24px 100px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg-shape {
+    position: absolute;
+    top: -40px; right: -60px;
+    width: 280px; height: 280px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .hero-bg-shape2 {
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  /* Árbol decorativo fondo */
+  .hero-tree {
+    position: absolute;
+    right: 5%;
+    top: 10%;
+    opacity: 0.08;
+    width: 200px;
+  }
+  .hero h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  }
+  .hero p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.88);
+    max-width: 460px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 90px;
+  }
+  .stat-num {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 820px;
+    margin: -44px auto 60px;
+    padding: 0 16px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,191,255,0.10), 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+    border: 1px solid rgba(0,191,255,0.12);
+  }
+
+  .card-header {
+    background: linear-gradient(90deg, var(--cyan-light) 0%, #f0fbff 100%);
+    padding: 26px 36px 20px;
+    border-bottom: 2px solid rgba(0,191,255,0.15);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .card-header-icon {
+    width: 44px; height: 44px;
+    background: var(--cyan);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .card-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gris-oscuro);
+  }
+  .card-header p { font-size: 12px; color: var(--gris); margin-top: 2px; }
+
+  .card-body { padding: 36px; }
+
+  /* ── FORM ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 16px;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .section-num {
+    width: 26px; height: 26px;
+    background: var(--cyan);
+    color: white;
+    border-radius: 50%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-label span.titulo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--gris-oscuro);
+  }
+  .section-line { flex: 1; height: 1px; background: #e8f6fc; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--gris);
+  }
+  .req { color: var(--cyan-dark); }
+
+  input, select {
+    padding: 11px 15px;
+    border: 1.5px solid #ddeef8;
+    border-radius: 10px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    color: var(--negro);
+    background: white;
+    transition: all 0.2s;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(0,191,255,0.12);
+  }
+  input::placeholder { color: #b8cdd8; }
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236d6e71' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* ── OBRAS SOCIALES ── */
+  .obras-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 4px;
+  }
+  .obra-tag {
+    padding: 6px 13px;
+    border: 1.5px solid #ddeef8;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gris);
+    cursor: pointer;
+    transition: all 0.18s;
+    background: white;
+    font-family: 'Lato', sans-serif;
+  }
+  .obra-tag:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--cyan-ultra); }
+  .obra-tag.selected { border-color: var(--cyan); background: var(--cyan-light); color: var(--cyan-dark); font-weight: 700; }
+
+  /* ── MÉDICOS ── */
+  .especialidad-grupo { margin-bottom: 20px; }
+  .esp-titulo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cyan-dark);
+    margin-bottom: 10px;
+    padding-left: 4px;
+    border-left: 3px solid var(--cyan);
+    padding-left: 10px;
+  }
+  .medicos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 10px;
+  }
+  .medico-card {
+    border: 1.5px solid #ddeef8;
+    border-radius: 12px;
+    padding: 13px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: white;
+  }
+  .medico-card:hover { border-color: var(--cyan); background: var(--cyan-ultra); }
+  .medico-card.selected { border-color: var(--cyan); background: var(--cyan-light); box-shadow: 0 0 0 3px rgba(0,191,255,0.12); }
+  .medico-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .medico-inicial {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--cyan-light);
+    color: var(--cyan-dark);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .medico-card.selected .medico-inicial { background: var(--cyan); color: white; }
+  .medico-nombre { font-size: 13px; font-weight: 700; color: var(--gris-oscuro); line-height: 1.3; }
+  .medico-esp { font-size: 11px; color: var(--gris); margin-top: 2px; }
+  .medico-check {
+    position: absolute; top: 10px; right: 10px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid #ddeef8;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .medico-card.selected .medico-check { background: var(--cyan); border-color: var(--cyan); }
+  .medico-check::after {
+    content: '';
+    width: 5px; height: 8px;
+    border: 2px solid white;
+    border-top: none; border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    display: none;
+  }
+  .medico-card.selected .medico-check::after { display: block; }
+
+  /* ── HORARIOS ── */
+  .fecha-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .horarios-wrap { margin-top: 14px; }
+  .horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    gap: 7px;
+  }
+  .hora-btn {
+    padding: 9px 4px;
+    border: 1.5px solid #ddeef8;
+    border-radius: 8px;
+    background: white;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gris-oscuro);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+  .hora-btn:hover:not(.ocupado) { border-color: var(--cyan); background: var(--cyan-ultra); color: var(--cyan-dark); }
+  .hora-btn.seleccionado { border-color: var(--cyan); background: var(--cyan); color: white; box-shadow: 0 2px 8px rgba(0,191,255,0.3); }
+  .hora-btn.ocupado { background: #f8f8f8; color: #ccc; cursor: not-allowed; text-decoration: line-through; border-color: #f0f0f0; font-weight: 400; }
+
+  .horario-hint {
+    font-size: 11px;
+    color: var(--gris);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .horario-hint span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.verde { background: var(--cyan); }
+  .dot.rojo { background: #ddd; }
+
+  /* ── PLACEHOLDER ── */
+  .placeholder-msg {
+    color: var(--gris);
+    font-size: 13px;
+    padding: 16px 0;
+    text-align: center;
+    border: 1.5px dashed #ddeef8;
+    border-radius: 10px;
+    background: #fafeff;
+  }
+
+  /* ── ERROR MSG ── */
+  .msg {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 16px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .msg.error { background: #fff0f0; color: var(--rojo); border: 1px solid #ffd4d4; display: flex; }
+
+  /* ── BOTÓN ── */
+  .btn-reservar {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(90deg, var(--cyan-dark) 0%, var(--cyan) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 28px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .btn-reservar:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,191,255,0.35); }
+  .btn-reservar:active { transform: translateY(0); }
+
+  /* ── INFO CARDS ── */
+  .info-section {
+    max-width: 820px;
+    margin: 0 auto 50px;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .info-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    border: 1px solid #e8f6fc;
+    box-shadow: 0 2px 12px rgba(0,191,255,0.06);
+  }
+  .info-icon { font-size: 26px; margin-bottom: 8px; }
+  .info-title { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; color: var(--gris-oscuro); margin-bottom: 4px; }
+  .info-text { font-size: 12px; color: var(--gris); line-height: 1.5; }
+
+  /* ── MODAL ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+  }
+  .overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 36px 30px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    animation: slideUp 0.3s ease;
+    border-top: 4px solid var(--cyan);
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .modal-logo-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .modal-logo-text .n { color: var(--cyan); }
+  .modal-logo-text .t { color: var(--gris); }
+
+  .modal-check {
+    width: 60px; height: 60px;
+    background: var(--cyan-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .modal h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gris-oscuro);
+    margin-bottom: 8px;
+  }
+  .modal > p { font-size: 13px; color: var(--gris); line-height: 1.6; margin-bottom: 20px; }
+
+  .resumen {
+    background: #f8fbfe;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 22px;
+    border: 1px solid #ddeef8;
+    font-size: 13px;
+  }
+  .resumen-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #eef5fa;
+    gap: 10px;
+  }
+  .resumen-row:last-child { border-bottom: none; }
+  .resumen-row .label { color: var(--gris); font-weight: 400; }
+  .resumen-row .valor { color: var(--gris-oscuro); font-weight: 700; text-align: right; }
+
+  .btn-wsp {
+    width: 100%;
+    padding: 14px;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }
+  .btn-wsp:hover { background: #20ba5a; transform: translateY(-1px); }
+
+  .btn-volver {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: var(--gris);
+    border: 1.5px solid #ddeef8;
+    border-radius: 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-volver:hover { border-color: var(--cyan); color: var(--cyan-dark); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--gris-oscuro);
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    padding: 24px 16px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  footer strong { color: white; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .form-grid, .fecha-row { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    .card-body { padding: 22px 16px; }
+    .card-header { padding: 20px 16px 16px; }
+    .info-section { grid-template-columns: 1fr; }
+    .medicos-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-stats { gap: 10px; }
+    .stat { min-width: 80px; padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo-area">
+      <!-- Logo SVG inline basado en identidad NEUTRA -->
+      <svg class="logo-svg" viewBox="0 0 60 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Tronco/columna vertebral -->
+        <rect x="26" y="34" width="8" height="5" rx="1.5" fill="#00BFFF"/>
+        <rect x="25" y="40" width="10" height="5" rx="1.5" fill="#00BFFF"/>
+        <rect x="26" y="46" width="8" height="5" rx="1.5" fill="#00BFFF"/>
+        <rect x="27" y="52" width="6" height="4" rx="1.5" fill="#00BFFF"/>
+        <!-- Ramas neurales -->
+        <line x1="30" y1="34" x2="30" y2="14" stroke="#00BFFF" stroke-width="3" stroke-linecap="round"/>
+        <line x1="30" y1="20" x2="16" y2="10" stroke="#00BFFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="30" y1="20" x2="44" y2="10" stroke="#00BFFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="30" y1="16" x2="20" y2="5" stroke="#00BFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="30" y1="16" x2="38" y2="4" stroke="#00BFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="16" y1="10" x2="10" y2="4" stroke="#00BFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="44" y1="10" x2="50" y2="4" stroke="#00BFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="30" y1="14" x2="24" y2="7" stroke="#00BFFF" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="30" y1="14" x2="36" y2="7" stroke="#00BFFF" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- Nodos terminales -->
+        <circle cx="10" cy="4" r="2" fill="#00BFFF"/>
+        <circle cx="50" cy="4" r="2" fill="#00BFFF"/>
+        <circle cx="20" cy="5" r="1.8" fill="#00BFFF"/>
+        <circle cx="38" cy="4" r="1.8" fill="#00BFFF"/>
+        <circle cx="16" cy="10" r="1.5" fill="#00BFFF"/>
+        <circle cx="44" cy="10" r="1.5" fill="#00BFFF"/>
+        <circle cx="24" cy="7" r="1.5" fill="#00BFFF"/>
+        <circle cx="36" cy="7" r="1.5" fill="#00BFFF"/>
+      </svg>
+      <div class="logo-text">
+        <div class="nombre"><span class="neu">neu</span><span class="tra">tra</span></div>
+        <div class="subtitulo">Neurocirugía y Traumatología</div>
+      </div>
+    </div>
+    <div class="header-badge">📅 Turnos Online</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg-shape"></div>
+  <div class="hero-bg-shape2"></div>
+  <h1>Reservá tu turno<br>de forma rápida y simple</h1>
+  <p>Elegí tu especialista, seleccioná el horario disponible y confirmá tu turno al instante por WhatsApp.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Especialistas</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Especialidades</div></div>
+    <div class="stat"><div class="stat-num">8–19hs</div><div class="stat-label">Atención</div></div>
+    <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Reservas online</div></div>
+  </div>
+</div>
+
+<!-- FORMULARIO -->
+<main>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">📋</div>
+      <div>
+        <h2>Nueva reserva de turno</h2>
+        <p>Completá los datos y confirmá tu turno en segundos.</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- 1. DATOS -->
+      <div class="section-label">
+        <div class="section-num">1</div>
+        <span class="titulo">Datos del paciente</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre y apellido <span class="req">*</span></label>
+          <input type="text" id="nombre" placeholder="Ej: María González" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Teléfono / WhatsApp <span class="req">*</span></label>
+          <input type="tel" id="telefono" placeholder="Ej: 2604-123456">
+        </div>
+        <div class="form-group full">
+          <label>Obra social</label>
+          <div class="obras-grid" id="obrasGrid"></div>
+          <input type="text" id="obraInput" placeholder="Otra obra social o Particular" style="margin-top:10px;" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- 2. MÉDICO -->
+      <div class="section-label">
+        <div class="section-num">2</div>
+        <span class="titulo">Elegí tu médico</span>
+        <div class="section-line"></div>
+      </div>
+      <div id="medicosContainer"></div>
+
+      <!-- 3. FECHA Y HORA -->
+      <div class="section-label">
+        <div class="section-num">3</div>
+        <span class="titulo">Fecha y horario</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="fecha-row">
+        <div class="form-group">
+          <label>Fecha del turno <span class="req">*</span></label>
+          <input type="date" id="fecha">
+        </div>
+        <div class="form-group">
+          <label>Horarios disponibles <span class="req">*</span></label>
+          <div class="horario-hint">
+            <span><span class="dot verde"></span> Disponible</span>
+            <span><span class="dot rojo"></span> Ocupado</span>
+          </div>
+        </div>
+      </div>
+      <div class="horarios-wrap">
+        <div id="horariosGrid">
+          <div class="placeholder-msg">Seleccioná primero un médico y una fecha para ver los horarios disponibles.</div>
+        </div>
+      </div>
+
+      <!-- ERROR -->
+      <div class="msg" id="msgError">
+        <span>⚠️</span><span id="msgErrorTxt"></span>
+      </div>
+
+      <!-- BOTÓN -->
+      <button class="btn-reservar" onclick="confirmar()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Confirmar Turno
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- INFO CARDS -->
+<div class="info-section">
+  <div class="info-card">
+    <div class="info-icon">⚡</div>
+    <div class="info-title">Reserva instantánea</div>
+    <div class="info-text">Tu turno queda registrado de inmediato, sin llamadas ni esperas</div>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">📲</div>
+    <div class="info-title">Confirmación por WhatsApp</div>
+    <div class="info-text">La clínica recibe todos tus datos al instante</div>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">🔒</div>
+    <div class="info-title">Sin doble turno</div>
+    <div class="info-text">Los horarios tomados se bloquean automáticamente</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>NEUTRA — Neurocirugía y Traumatología</strong><br>
+  Turnos online 24/7 &nbsp;·&nbsp; WhatsApp +54 260 462-4156<br>
+  <span style="font-size:11px;opacity:0.5;">© 2025 NEUTRA. Todos los derechos reservados.</span>
+</footer>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-logo">
+      <svg width="28" height="34" viewBox="0 0 60 72" fill="none">
+        <rect x="26" y="34" width="8" height="5" rx="1.5" fill="#00BFFF"/>
+        <rect x="25" y="40" width="10" height="5" rx="1.5" fill="#00BFFF"/>
+        <rect x="26" y="46" width="8" height="5" rx="1.5" fill="#00BFFF"/>
+        <line x1="30" y1="34" x2="30" y2="14" stroke="#00BFFF" stroke-width="3" stroke-linecap="round"/>
+        <line x1="30" y1="20" x2="16" y2="10" stroke="#00BFFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="30" y1="20" x2="44" y2="10" stroke="#00BFFF" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="10" cy="4" r="2" fill="#00BFFF"/>
+        <circle cx="50" cy="4" r="2" fill="#00BFFF"/>
+      </svg>
+      <div class="modal-logo-text"><span class="n">neu</span><span class="t">tra</span></div>
+    </div>
+    <div class="modal-check">✅</div>
+    <h3>¡Turno confirmado!</h3>
+    <p>Revisá el resumen y enviá la confirmación a la clínica por WhatsApp.</p>
+    <div class="resumen" id="resumen"></div>
+    <a id="btnWsp" class="btn-wsp" href="#" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar confirmación a NEUTRA
+    </a>
+    <button class="btn-volver" onclick="cerrarModal()">← Volver / Modificar turno</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN ──────────────────────────────────────────────
+const WP = "542604624156";
+
+const ESPECIALIDADES = [
+  {
+    nombre: "Neurocirugía",
+    medicos: [
+      { id: 1, apellido: "Sosa", nombre: "Pablo", esp: "Neurocirugía" }
+    ]
+  },
+  {
+    nombre: "Traumatología Adultos",
+    medicos: [
+      { id: 2, apellido: "Félix", nombre: "Yuma", esp: "Traumatología Adultos" },
+      { id: 3, apellido: "Fiorentino", nombre: "Taiel", esp: "Traumatología Adultos" },
+      { id: 4, apellido: "Gatti", nombre: "Andrés", esp: "Traumatología Adultos" },
+    ]
+  },
+  {
+    nombre: "Traumatología Pediátrica",
+    medicos: [
+      { id: 5, apellido: "Garbín", nombre: "Luciana", esp: "Traumatología Pediátrica" },
+      { id: 6, apellido: "Sabina", nombre: "Juan", esp: "Traumatología Pediátrica" },
+    ]
+  },
+  {
+    nombre: "Rehabilitación",
+    medicos: [
+      { id: 7, apellido: "Pérez Pesce", nombre: "Federico", esp: "Rehabilitación" }
+    ]
+  },
+  {
+    nombre: "Medicina del Dolor",
+    medicos: [
+      { id: 8, apellido: "Rubio", nombre: "Samuel", esp: "Medicina del Dolor" }
+    ]
+  }
+];
+
+const OBRAS = ["OSDE", "Swiss Medical", "Galeno", "IOMA", "PAMI", "Medicus", "Sancor Salud", "OMINT", "Avalian", "OSPAT", "OSPRERA"];
+
+// Horarios cada 30 min 8:00 a 18:30
+const HORARIOS = [];
+for (let h = 8; h <= 18; h++) {
+  HORARIOS.push(`${String(h).padStart(2,'0')}:00`);
+  if (h < 19) HORARIOS.push(`${String(h).padStart(2,'0')}:30`);
+}
+const HORAS = HORARIOS.filter(h => h <= "18:30");
+
+// Algunos turnos pre-ocupados de ejemplo para la demo
+const turnosOcupados = {
+  "1_hoy_09:00": true,
+  "1_hoy_10:30": true,
+  "2_hoy_08:30": true,
+  "2_hoy_11:00": true,
+  "3_hoy_09:30": true,
+  "5_hoy_14:00": true,
+};
+
+let medicoSel = null;
+let horaSel = null;
+
+// ── INIT ────────────────────────────────────────────────────────
+function init() {
+  const hoy = new Date();
+  const f = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  document.getElementById('fecha').min = f;
+  document.getElementById('fecha').value = f;
+  document.getElementById('fecha').addEventListener('change', renderHoras);
+  renderObras();
+  renderMedicos();
+}
+
+// ── OBRAS SOCIALES ───────────────────────────────────────────────
+function renderObras() {
+  const g = document.getElementById('obrasGrid');
+  OBRAS.forEach(o => {
+    const t = document.createElement('span');
+    t.className = 'obra-tag';
+    t.textContent = o;
+    t.onclick = () => {
+      document.querySelectorAll('.obra-tag').forEach(x => x.classList.remove('selected'));
+      t.classList.add('selected');
+      document.getElementById('obraInput').value = o;
+    };
+    g.appendChild(t);
+  });
+}
+
+// ── MÉDICOS ──────────────────────────────────────────────────────
+function renderMedicos() {
+  const c = document.getElementById('medicosContainer');
+  c.innerHTML = '';
+  ESPECIALIDADES.forEach(esp => {
+    const grupo = document.createElement('div');
+    grupo.className = 'especialidad-grupo';
+    grupo.innerHTML = `<div class="esp-titulo">${esp.nombre}</div><div class="medicos-grid" id="grid_${esp.nombre.replace(/\s/g,'_')}"></div>`;
+    c.appendChild(grupo);
+    const grid = grupo.querySelector('.medicos-grid');
+    esp.medicos.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'medico-card';
+      card.id = `med_${m.id}`;
+      card.onclick = () => selMedico(m.id);
+      const inicial = m.nombre.charAt(0) + m.apellido.charAt(0);
+      card.innerHTML = `
+        <input type="radio" name="medico" value="${m.id}">
+        <div class="medico-inicial">${inicial}</div>
+        <div class="medico-nombre">Dr/a. ${m.apellido} ${m.nombre}</div>
+        <div class="medico-esp">${m.esp}</div>
+        <div class="medico-check"></div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+function selMedico(id) {
+  medicoSel = id;
+  document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`med_${id}`).classList.add('selected');
+  renderHoras();
+}
+
+// ── HORARIOS ─────────────────────────────────────────────────────
+function renderHoras() {
+  const g = document.getElementById('horariosGrid');
+  const fecha = document.getElementById('fecha').value;
+  if (!medicoSel || !fecha) {
+    g.innerHTML = `<div class="placeholder-msg">Seleccioná primero un médico y una fecha para ver los horarios disponibles.</div>`;
+    return;
+  }
+  horaSel = null;
+  g.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'horarios-grid';
+
+  // Usar fecha real o "hoy" para los de ejemplo
+  const hoy = new Date();
+  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  const esHoy = fecha === fechaHoy;
+
+  HORAS.forEach(h => {
+    const keyReal = `${medicoSel}_${fecha}_${h}`;
+    const keyDemo = `${medicoSel}_hoy_${h}`;
+    const ocupado = !!(turnosOcupados[keyReal] || (esHoy && turnosOcupados[keyDemo]));
+    const btn = document.createElement('button');
+    btn.className = 'hora-btn' + (ocupado ? ' ocupado' : '');
+    btn.textContent = h;
+    btn.disabled = ocupado;
+    btn.title = ocupado ? 'Horario no disponible' : `Reservar ${h} hs`;
+    if (!ocupado) btn.onclick = () => selHora(h, btn);
+    grid.appendChild(btn);
+  });
+  g.appendChild(grid);
+}
+
+function selHora(h, btn) {
+  document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionado'));
+  btn.classList.add('seleccionado');
+  horaSel = h;
+}
+
+// ── CONFIRMAR ────────────────────────────────────────────────────
+function confirmar() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const tel    = document.getElementById('telefono').value.trim();
+  const fecha  = document.getElementById('fecha').value;
+  const obra   = document.getElementById('obraInput').value.trim() || "Sin obra social (Particular)";
+
+  if (!nombre) return error("Por favor ingresá tu nombre y apellido.");
+  if (!tel)    return error("Por favor ingresá tu teléfono de contacto.");
+  if (!medicoSel) return error("Por favor seleccioná un médico.");
+  if (!fecha)  return error("Por favor elegí una fecha.");
+  if (!horaSel) return error("Por favor seleccioná un horario disponible.");
+
+  const key = `${medicoSel}_${fecha}_${horaSel}`;
+  if (turnosOcupados[key]) { renderHoras(); return error("Ese horario acaba de ser tomado. Por favor elegí otro."); }
+
+  limpiarError();
+
+  // Bloquear turno
+  turnosOcupados[key] = true;
+
+  // Buscar médico
+  let medico = null;
+  ESPECIALIDADES.forEach(e => e.medicos.forEach(m => { if (m.id === medicoSel) medico = m; }));
+
+  const fechaFmt = new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Resumen
+  document.getElementById('resumen').innerHTML = `
+    <div class="resumen-row"><span class="label">Paciente</span><span class="valor">${nombre}</span></div>
+    <div class="resumen-row"><span class="label">Teléfono</span><span class="valor">${tel}</span></div>
+    <div class="resumen-row"><span class="label">Médico</span><span class="valor">Dr/a. ${medico.apellido} ${medico.nombre}</span></div>
+    <div class="resumen-row"><span class="label">Especialidad</span><span class="valor">${medico.esp}</span></div>
+    <div class="resumen-row"><span class="label">Fecha</span><span class="valor">${fechaFmt}</span></div>
+    <div class="resumen-row"><span class="label">Horario</span><span class="valor">${horaSel} hs</span></div>
+    <div class="resumen-row"><span class="label">Obra Social</span><span class="valor">${obra}</span></div>
+  `;
+
+  // WhatsApp
+  const msg = `🏥 *NUEVA RESERVA — NEUTRA*
+_Neurocirugía y Traumatología_
+
+👤 *Paciente:* ${nombre}
+📞 *Teléfono:* ${tel}
+🩺 *Médico:* Dr/a. ${medico.apellido} ${medico.nombre}
+🔬 *Especialidad:* ${medico.esp}
+📅 *Fecha:* ${fechaFmt}
+🕐 *Horario:* ${horaSel} hs
+💳 *Obra Social:* ${obra}
+
+_Turno reservado online — neutra.com.ar_`;
+
+  document.getElementById('btnWsp').href = `https://wa.me/${WP}?text=${encodeURIComponent(msg)}`;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function cerrarModal() {
+  // Liberar turno si cancela
+  const fecha = document.getElementById('fecha').value;
+  if (medicoSel && fecha && horaSel) {
+    delete turnosOcupados[`${medicoSel}_${fecha}_${horaSel}`];
+  }
+  document.getElementById('overlay').classList.remove('show');
+  renderHoras();
+}
+
+function error(txt) {
+  const el = document.getElementById('msgError');
+  document.getElementById('msgErrorTxt').textContent = txt;
+  el.className = 'msg error';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function limpiarError() { document.getElementById('msgError').className = 'msg'; }
+
+// Click fuera del modal
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+
+// Al enviar por WhatsApp, limpiar formulario
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnWsp').addEventListener('click', () => {
+    setTimeout(() => {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('nombre').value = '';
+      document.getElementById('telefono').value = '';
+      document.getElementById('obraInput').value = '';
+      document.querySelectorAll('.obra-tag').forEach(t => t.classList.remove('selected'));
+      document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'));
+      medicoSel = null; horaSel = null;
+      renderHoras();
+    }, 600);
+  });
+  init();
+});
+</script>
+</body>
+</html>
