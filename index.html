@@ -587,6 +587,72 @@
   }
   .btn-volver:hover { border-color: var(--cyan); color: var(--cyan-dark); }
 
+  /* ── MODAL CANCELACIÓN ── */
+  .cancel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
+  }
+  .cancel-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+  .cancel-modal {
+    background: white;
+    border-radius: 20px;
+    padding: 36px 30px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    animation: slideUp 0.3s ease;
+    border-top: 4px solid var(--rojo);
+  }
+  .cancel-icon {
+    width: 60px; height: 60px;
+    background: #fff0f0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .cancel-modal h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--gris-oscuro); margin-bottom: 8px;
+  }
+  .cancel-modal > p { font-size: 13px; color: var(--gris); line-height: 1.6; margin-bottom: 20px; }
+  .cancel-datos {
+    background: #f8fbfe; border-radius: 12px;
+    padding: 16px; text-align: left;
+    margin-bottom: 22px; border: 1px solid #ddeef8; font-size: 13px;
+  }
+  .cancel-datos .resumen-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eef5fa; gap: 10px; }
+  .cancel-datos .resumen-row:last-child { border-bottom: none; }
+  .cancel-datos .resumen-row .label { color: var(--gris); }
+  .cancel-datos .resumen-row .valor { color: var(--gris-oscuro); font-weight: 700; text-align: right; }
+  .btn-cancelar-turno {
+    width: 100%; padding: 14px;
+    background: var(--rojo); color: white; border: none;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-cancelar-turno:hover { background: #c0392b; transform: translateY(-1px); }
+  .btn-cancelar-turno:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+  .btn-volver-reserva {
+    width: 100%; padding: 11px; background: transparent;
+    color: var(--gris); border: 1.5px solid #ddeef8; border-radius: 12px;
+    font-family: 'Lato', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-volver-reserva:hover { border-color: var(--cyan); color: var(--cyan-dark); }
+  .cancel-success { display: none; }
+  .cancel-success.show { display: block; }
+  .cancel-form.hide { display: none; }
+
   /* ── FOOTER ── */
   footer {
     background: var(--gris-oscuro);
@@ -742,12 +808,67 @@
   </div>
 </div>
 
+<!-- BOTÓN CANCELAR -->
+<div style="max-width:820px;margin:0 auto 30px;padding:0 16px;">
+  <button onclick="abrirBuscarTurno()" style="width:100%;padding:14px;background:white;color:var(--rojo);border:2px solid #ffd4d4;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 12px rgba(220,53,69,0.08);" onmouseover="this.style.background='#fff0f0'" onmouseout="this.style.background='white'">
+    ❌ ¿Necesitás cancelar tu turno? Tocá acá
+  </button>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <strong>NEUTRA — Neurocirugía y Traumatología</strong><br>
   Turnos online 24/7 &nbsp;·&nbsp; WhatsApp +54 260 462-4156<br>
   <span style="font-size:11px;opacity:0.5;">© 2025 NEUTRA. Todos los derechos reservados.</span>
 </footer>
+
+<!-- MODAL CANCELACIÓN -->
+<div class="cancel-overlay" id="cancelOverlay">
+  <div class="cancel-modal">
+
+    <!-- PASO 1: Buscar por teléfono -->
+    <div id="cancelStep1">
+      <div class="modal-logo" style="margin-bottom:16px;">
+        <div class="modal-logo-text"><span class="n">neu</span><span class="t">tra</span></div>
+      </div>
+      <div class="cancel-icon">🔍</div>
+      <h3>Cancelar turno</h3>
+      <p>Ingresá el número de teléfono con el que hiciste la reserva y buscamos tu turno.</p>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--gris);display:block;margin-bottom:6px;">Teléfono / WhatsApp</label>
+        <input type="tel" id="cancelTelefono" placeholder="Ej: 2604-123456"
+          style="width:100%;padding:12px 15px;border:1.5px solid #ddeef8;border-radius:10px;font-family:'Lato',sans-serif;font-size:14px;outline:none;"
+          onkeydown="if(event.key==='Enter') buscarTurno()">
+      </div>
+      <div id="cancelBuscarMsg" style="font-size:13px;color:var(--rojo);margin-bottom:12px;display:none;"></div>
+      <button onclick="buscarTurno()" id="btnBuscar" style="width:100%;padding:14px;background:var(--cyan);color:white;border:none;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all 0.2s;">
+        🔍 Buscar mi turno
+      </button>
+      <button class="btn-volver-reserva" onclick="cerrarCancelModal()">← Volver</button>
+    </div>
+
+    <!-- PASO 2: Confirmar cancelación -->
+    <div id="cancelStep2" style="display:none;">
+      <div class="cancel-icon">❌</div>
+      <h3>Cancelar turno</h3>
+      <p>Encontramos tu turno. ¿Confirmás la cancelación?</p>
+      <div class="cancel-datos" id="cancelDatos"></div>
+      <button class="btn-cancelar-turno" id="btnConfirmarCancelacion" onclick="ejecutarCancelacion()">
+        🗑️ Sí, cancelar mi turno
+      </button>
+      <button class="btn-volver-reserva" onclick="volverStep1()">← Volver</button>
+    </div>
+
+    <!-- PASO 3: Éxito -->
+    <div id="cancelStep3" style="display:none;">
+      <div class="cancel-icon" style="background:#e8f5ef;font-size:32px;">✅</div>
+      <h3 style="margin-bottom:8px;">¡Turno cancelado!</h3>
+      <p style="margin-bottom:20px;">Tu turno fue cancelado correctamente. El horario ya está disponible.<br><br>La clínica fue notificada automáticamente.</p>
+      <button class="btn-volver-reserva" style="border-color:var(--cyan);color:var(--cyan-dark);" onclick="cerrarCancelModal()">Volver al inicio</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- MODAL -->
 <div class="overlay" id="overlay">
@@ -762,8 +883,9 @@
     <div class="resumen" id="resumen"></div>
     <a id="btnWsp" class="btn-wsp" href="#" target="_blank">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Enviar confirmación a NEUTRA
+      Notificar a NEUTRA
     </a>
+
     <button class="btn-volver" onclick="cerrarModal()">← Volver / Modificar turno</button>
   </div>
 </div>
@@ -771,7 +893,7 @@
 <script type="module">
 // ── FIREBASE CONFIG ─────────────────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, deleteField, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBrSmfLTTnUj3Sx6m6fwXXY64mJI9Huj7I",
@@ -875,7 +997,7 @@ function escucharTurnos() {
 }
 
 // ── GUARDAR TURNO EN FIREBASE ─────────────────────────────────────
-async function bloquearTurnoEnFirebase(medicoId, fecha, hora) {
+async function bloquearTurnoEnFirebase(medicoId, fecha, hora, nombre, tel, obra) {
   const docRef = doc(db, "turnos", `${medicoId}_${fecha}`);
   const snap = await getDoc(docRef);
   
@@ -886,7 +1008,7 @@ async function bloquearTurnoEnFirebase(medicoId, fecha, hora) {
     return false; // Ya está ocupado
   }
   
-  horasActuales[hora] = true;
+  horasActuales[hora] = { nombre, tel, obra };
   await setDoc(docRef, { horas: horasActuales }, { merge: true });
   return true;
 }
@@ -998,7 +1120,7 @@ async function confirmar() {
   btnReservar.textContent = 'Guardando turno...';
 
   // Guardar en Firebase (con verificación de duplicado)
-  const guardado = await bloquearTurnoEnFirebase(medicoSel, fecha, horaSel);
+  const guardado = await bloquearTurnoEnFirebase(medicoSel, fecha, horaSel, nombre, tel, obra);
 
   btnReservar.disabled = false;
   btnReservar.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirmar Turno`;
@@ -1026,7 +1148,7 @@ async function confirmar() {
     <div class="resumen-row"><span class="label">Obra Social</span><span class="valor">${obra}</span></div>
   `;
 
-  // WhatsApp
+  // WhatsApp a la clínica
   const msg = `🏥 *NUEVA RESERVA — NEUTRA*
 _Neurocirugía y Traumatología_
 
@@ -1078,10 +1200,164 @@ document.getElementById('btnWsp').addEventListener('click', () => {
   }, 600);
 });
 
-// Exponer confirmar globalmente
+// ── CANCELACIÓN ──────────────────────────────────────────────────
+let cancelacionActual = null;
+
+function abrirBuscarTurno() {
+  document.getElementById('cancelStep1').style.display = 'block';
+  document.getElementById('cancelStep2').style.display = 'none';
+  document.getElementById('cancelStep3').style.display = 'none';
+  document.getElementById('cancelTelefono').value = '';
+  document.getElementById('cancelBuscarMsg').style.display = 'none';
+  document.getElementById('cancelOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('cancelTelefono').focus(), 300);
+}
+
+function volverStep1() {
+  document.getElementById('cancelStep1').style.display = 'block';
+  document.getElementById('cancelStep2').style.display = 'none';
+}
+
+async function buscarTurno() {
+  const tel = document.getElementById('cancelTelefono').value.trim();
+  const msgEl = document.getElementById('cancelBuscarMsg');
+  const btn = document.getElementById('btnBuscar');
+
+  if (!tel) {
+    msgEl.textContent = 'Por favor ingresá tu número de teléfono.';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Buscando...';
+  btn.disabled = true;
+  msgEl.style.display = 'none';
+
+  try {
+    const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const snap = await getDocs(collection(db, "turnos"));
+    let turnoEncontrado = null;
+    const telBuscado = tel.replace(/[^0-9]/g, '');
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const partes = docSnap.id.split('_');
+      const medicoId = parseInt(partes[0]);
+      const fecha = partes[1];
+      const horas = data.horas || {};
+      Object.entries(horas).forEach(([hora, info]) => {
+        if (typeof info === 'object' && info !== null && info.tel) {
+          const telGuardado = info.tel.replace(/[^0-9]/g, '');
+          if (telGuardado.includes(telBuscado) || telBuscado.includes(telGuardado)) {
+            if (!turnoEncontrado) {
+              turnoEncontrado = { medicoId, fecha, hora, ...info, docId: docSnap.id };
+            }
+          }
+        }
+      });
+    });
+
+    btn.textContent = '🔍 Buscar mi turno';
+    btn.disabled = false;
+
+    if (!turnoEncontrado) {
+      msgEl.textContent = 'No encontramos ningún turno con ese teléfono. Verificá el número ingresado.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    let medico = null;
+    ESPECIALIDADES.forEach(e => e.medicos.forEach(m => { if (m.id === turnoEncontrado.medicoId) medico = m; }));
+    const titulo = medico ? (medico.genero === 'f' ? 'Dra.' : 'Dr.') : '';
+    const nombreMedico = medico ? `${titulo} ${medico.apellido} ${medico.nombre}` : 'N/D';
+    const esp = medico ? medico.esp : '';
+    const fechaFmt = new Date(turnoEncontrado.fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+    cancelacionActual = { ...turnoEncontrado, nombreMedico, esp, fechaFmt };
+
+    document.getElementById('cancelDatos').innerHTML = `
+      <div class="resumen-row"><span class="label">Paciente</span><span class="valor">${turnoEncontrado.nombre || 'N/D'}</span></div>
+      <div class="resumen-row"><span class="label">Médico</span><span class="valor">${nombreMedico}</span></div>
+      <div class="resumen-row"><span class="label">Especialidad</span><span class="valor">${esp}</span></div>
+      <div class="resumen-row"><span class="label">Fecha</span><span class="valor">${fechaFmt}</span></div>
+      <div class="resumen-row"><span class="label">Horario</span><span class="valor">${turnoEncontrado.hora} hs</span></div>
+      <div class="resumen-row"><span class="label">Obra Social</span><span class="valor">${turnoEncontrado.obra || 'N/D'}</span></div>
+    `;
+
+    document.getElementById('cancelStep1').style.display = 'none';
+    document.getElementById('cancelStep2').style.display = 'block';
+
+  } catch(e) {
+    btn.textContent = '🔍 Buscar mi turno';
+    btn.disabled = false;
+    msgEl.textContent = 'Error al buscar. Intentá de nuevo.';
+    msgEl.style.display = 'block';
+    console.error(e);
+  }
+}
+
+async function ejecutarCancelacion() {
+  const btn = document.getElementById('btnConfirmarCancelacion');
+  btn.disabled = true;
+  btn.textContent = 'Cancelando...';
+
+  try {
+    const { medicoId, fecha, hora, nombre, nombreMedico, esp, fechaFmt, tel, obra } = cancelacionActual;
+    const docRef = doc(db, "turnos", `${medicoId}_${fecha}`);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const horas = snap.data().horas || {};
+      delete horas[hora];
+      await setDoc(docRef, { horas }, { merge: false });
+    }
+
+    const msgClinica = `❌ *TURNO CANCELADO — NEUTRA*
+
+👤 *Paciente:* ${nombre || 'N/D'}
+📞 *Teléfono:* ${tel || 'N/D'}
+🩺 *Médico:* ${nombreMedico}
+🔬 *Especialidad:* ${esp}
+📅 *Fecha:* ${fechaFmt}
+🕐 *Horario:* ${hora} hs
+
+_El horario quedó disponible automáticamente._`;
+
+    document.getElementById('cancelStep2').style.display = 'none';
+    document.getElementById('cancelStep3').style.display = 'block';
+
+    setTimeout(() => {
+      window.open(`https://wa.me/${WP}?text=${encodeURIComponent(msgClinica)}`, '_blank');
+    }, 800);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '🗑️ Sí, cancelar mi turno';
+    alert('Hubo un error. Por favor intentá de nuevo.');
+  }
+}
+
+function cerrarCancelModal() {
+  document.getElementById('cancelOverlay').classList.remove('show');
+  document.getElementById('cancelStep1').style.display = 'block';
+  document.getElementById('cancelStep2').style.display = 'none';
+  document.getElementById('cancelStep3').style.display = 'none';
+  document.getElementById('cancelTelefono').value = '';
+  document.getElementById('cancelBuscarMsg').style.display = 'none';
+  const btnConf = document.getElementById('btnConfirmarCancelacion');
+  if (btnConf) { btnConf.disabled = false; btnConf.innerHTML = '🗑️ Sí, cancelar mi turno'; }
+  cancelacionActual = null;
+}
+
+// Exponer funciones globalmente
 window.confirmar = confirmar;
+window.abrirBuscarTurno = abrirBuscarTurno;
+window.buscarTurno = buscarTurno;
+window.volverStep1 = volverStep1;
+window.ejecutarCancelacion = ejecutarCancelacion;
+window.cerrarCancelModal = cerrarCancelModal;
 
 init();
+
 </script>
 </body>
 </html>
