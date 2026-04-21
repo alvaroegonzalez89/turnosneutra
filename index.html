@@ -768,8 +768,24 @@
   </div>
 </div>
 
-<script>
-// ── CONFIGURACIÓN ──────────────────────────────────────────────
+<script type="module">
+// ── FIREBASE CONFIG ─────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBrSmfLTTnUj3Sx6m6fwXXY64mJI9Huj7I",
+  authDomain: "turnosneutra.firebaseapp.com",
+  projectId: "turnosneutra",
+  storageBucket: "turnosneutra.firebasestorage.app",
+  messagingSenderId: "292795352700",
+  appId: "1:292795352700:web:62cd71cf40d343eb6e6bf9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── CONFIGURACIÓN ────────────────────────────────────────────────
 const WP = "542604624156";
 
 const ESPECIALIDADES = [
@@ -810,29 +826,69 @@ const ESPECIALIDADES = [
 
 const OBRAS = ["OSDE", "Swiss Medical", "Galeno", "IOMA", "PAMI", "Medicus", "Sancor Salud", "OMINT", "Avalian", "OSPAT", "OSPRERA"];
 
-// Horarios cada 30 min 8:00 a 18:30
-const HORARIOS = [];
+const HORAS = [];
 for (let h = 8; h <= 18; h++) {
-  HORARIOS.push(`${String(h).padStart(2,'0')}:00`);
-  if (h < 19) HORARIOS.push(`${String(h).padStart(2,'0')}:30`);
+  HORAS.push(`${String(h).padStart(2,'0')}:00`);
+  HORAS.push(`${String(h).padStart(2,'0')}:30`);
 }
-const HORAS = HORARIOS.filter(h => h <= "18:30");
+const HORARIOS = HORAS.filter(h => h <= "18:30");
 
-// Turnos ocupados — se llena automáticamente cuando un paciente confirma
-const turnosOcupados = {};
-
+// ── ESTADO ───────────────────────────────────────────────────────
+let turnosOcupados = {};  // se llena desde Firebase en tiempo real
 let medicoSel = null;
 let horaSel = null;
+let unsubscribe = null;  // para detener el listener cuando cambia médico/fecha
 
-// ── INIT ────────────────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────────────────
 function init() {
   const hoy = new Date();
   const f = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
   document.getElementById('fecha').min = f;
   document.getElementById('fecha').value = f;
-  document.getElementById('fecha').addEventListener('change', renderHoras);
+  document.getElementById('fecha').addEventListener('change', () => {
+    horaSel = null;
+    escucharTurnos();
+  });
   renderObras();
   renderMedicos();
+}
+
+// ── ESCUCHAR TURNOS EN TIEMPO REAL DESDE FIREBASE ────────────────
+function escucharTurnos() {
+  const fecha = document.getElementById('fecha').value;
+  if (!medicoSel || !fecha) return;
+
+  // Detener listener anterior
+  if (unsubscribe) unsubscribe();
+
+  const docRef = doc(db, "turnos", `${medicoSel}_${fecha}`);
+  
+  // Escuchar cambios en tiempo real
+  unsubscribe = onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      turnosOcupados = snap.data().horas || {};
+    } else {
+      turnosOcupados = {};
+    }
+    renderHoras();
+  });
+}
+
+// ── GUARDAR TURNO EN FIREBASE ─────────────────────────────────────
+async function bloquearTurnoEnFirebase(medicoId, fecha, hora) {
+  const docRef = doc(db, "turnos", `${medicoId}_${fecha}`);
+  const snap = await getDoc(docRef);
+  
+  const horasActuales = snap.exists() ? (snap.data().horas || {}) : {};
+  
+  // Verificar que no fue tomado mientras confirmaba
+  if (horasActuales[hora]) {
+    return false; // Ya está ocupado
+  }
+  
+  horasActuales[hora] = true;
+  await setDoc(docRef, { horas: horasActuales }, { merge: true });
+  return true;
 }
 
 // ── OBRAS SOCIALES ───────────────────────────────────────────────
@@ -882,35 +938,30 @@ function renderMedicos() {
 
 function selMedico(id) {
   medicoSel = id;
+  horaSel = null;
   document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'));
   document.getElementById(`med_${id}`).classList.add('selected');
-  renderHoras();
+  escucharTurnos();
 }
 
 // ── HORARIOS ─────────────────────────────────────────────────────
 function renderHoras() {
   const g = document.getElementById('horariosGrid');
   const fecha = document.getElementById('fecha').value;
+
   if (!medicoSel || !fecha) {
     g.innerHTML = `<div class="placeholder-msg">Seleccioná primero un médico y una fecha para ver los horarios disponibles.</div>`;
     return;
   }
-  horaSel = null;
+
   g.innerHTML = '';
   const grid = document.createElement('div');
   grid.className = 'horarios-grid';
 
-  // Usar fecha real o "hoy" para los de ejemplo
-  const hoy = new Date();
-  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-  const esHoy = fecha === fechaHoy;
-
-  HORAS.forEach(h => {
-    const keyReal = `${medicoSel}_${fecha}_${h}`;
-    const keyDemo = `${medicoSel}_hoy_${h}`;
-    const ocupado = !!(turnosOcupados[keyReal] || (esHoy && turnosOcupados[keyDemo]));
+  HORARIOS.forEach(h => {
+    const ocupado = !!turnosOcupados[h];
     const btn = document.createElement('button');
-    btn.className = 'hora-btn' + (ocupado ? ' ocupado' : '');
+    btn.className = 'hora-btn' + (ocupado ? ' ocupado' : '') + (horaSel === h ? ' seleccionado' : '');
     btn.textContent = h;
     btn.disabled = ocupado;
     btn.title = ocupado ? 'Horario no disponible' : `Reservar ${h} hs`;
@@ -927,42 +978,51 @@ function selHora(h, btn) {
 }
 
 // ── CONFIRMAR ────────────────────────────────────────────────────
-function confirmar() {
+async function confirmar() {
   const nombre = document.getElementById('nombre').value.trim();
   const tel    = document.getElementById('telefono').value.trim();
   const fecha  = document.getElementById('fecha').value;
   const obra   = document.getElementById('obraInput').value.trim() || "Sin obra social (Particular)";
 
-  if (!nombre) return error("Por favor ingresá tu nombre y apellido.");
-  if (!tel)    return error("Por favor ingresá tu teléfono de contacto.");
+  if (!nombre)    return error("Por favor ingresá tu nombre y apellido.");
+  if (!tel)       return error("Por favor ingresá tu teléfono de contacto.");
   if (!medicoSel) return error("Por favor seleccioná un médico.");
-  if (!fecha)  return error("Por favor elegí una fecha.");
-  if (!horaSel) return error("Por favor seleccioná un horario disponible.");
-
-  const key = `${medicoSel}_${fecha}_${horaSel}`;
-  if (turnosOcupados[key]) { renderHoras(); return error("Ese horario acaba de ser tomado. Por favor elegí otro."); }
+  if (!fecha)     return error("Por favor elegí una fecha.");
+  if (!horaSel)   return error("Por favor seleccioná un horario disponible.");
 
   limpiarError();
 
-  // Bloquear turno inmediatamente para evitar duplicaciones
-  turnosOcupados[key] = true;
-  // Actualizar visual de horarios en segundo plano
-  renderHoras();
+  // Deshabilitar botón mientras guarda
+  const btnReservar = document.querySelector('.btn-reservar');
+  btnReservar.disabled = true;
+  btnReservar.textContent = 'Guardando turno...';
+
+  // Guardar en Firebase (con verificación de duplicado)
+  const guardado = await bloquearTurnoEnFirebase(medicoSel, fecha, horaSel);
+
+  btnReservar.disabled = false;
+  btnReservar.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirmar Turno`;
+
+  if (!guardado) {
+    return error("Ese horario acaba de ser tomado por otro paciente. Por favor elegí otro.");
+  }
 
   // Buscar médico
   let medico = null;
   ESPECIALIDADES.forEach(e => e.medicos.forEach(m => { if (m.id === medicoSel) medico = m; }));
+  const titulo = medico.genero === 'f' ? 'Dra.' : 'Dr.';
 
-  const fechaFmt = new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const fechaFmt = new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const horaFmt = horaSel; // ya es string tipo "09:30"
 
-  // Resumen
+  // Resumen modal
   document.getElementById('resumen').innerHTML = `
     <div class="resumen-row"><span class="label">Paciente</span><span class="valor">${nombre}</span></div>
     <div class="resumen-row"><span class="label">Teléfono</span><span class="valor">${tel}</span></div>
-    <div class="resumen-row"><span class="label">Médico</span><span class="valor">${medico.genero === 'f' ? 'Dra.' : 'Dr.'} ${medico.apellido} ${medico.nombre}</span></div>
+    <div class="resumen-row"><span class="label">Médico</span><span class="valor">${titulo} ${medico.apellido} ${medico.nombre}</span></div>
     <div class="resumen-row"><span class="label">Especialidad</span><span class="valor">${medico.esp}</span></div>
     <div class="resumen-row"><span class="label">Fecha</span><span class="valor">${fechaFmt}</span></div>
-    <div class="resumen-row"><span class="label">Horario</span><span class="valor">${horaSel} hs</span></div>
+    <div class="resumen-row"><span class="label">Horario</span><span class="valor">${horaFmt} hs</span></div>
     <div class="resumen-row"><span class="label">Obra Social</span><span class="valor">${obra}</span></div>
   `;
 
@@ -972,10 +1032,10 @@ _Neurocirugía y Traumatología_
 
 👤 *Paciente:* ${nombre}
 📞 *Teléfono:* ${tel}
-🩺 *Médico:* ${medico.genero === 'f' ? 'Dra.' : 'Dr.'} ${medico.apellido} ${medico.nombre}
+🩺 *Médico:* ${titulo} ${medico.apellido} ${medico.nombre}
 🔬 *Especialidad:* ${medico.esp}
 📅 *Fecha:* ${fechaFmt}
-🕐 *Horario:* ${horaSel} hs
+🕐 *Horario:* ${horaFmt} hs
 💳 *Obra Social:* ${obra}
 
 _Turno reservado online — neutra.com.ar_`;
@@ -985,13 +1045,7 @@ _Turno reservado online — neutra.com.ar_`;
 }
 
 function cerrarModal() {
-  // Liberar turno si cancela
-  const fecha = document.getElementById('fecha').value;
-  if (medicoSel && fecha && horaSel) {
-    delete turnosOcupados[`${medicoSel}_${fecha}_${horaSel}`];
-  }
   document.getElementById('overlay').classList.remove('show');
-  renderHoras();
 }
 
 function error(txt) {
@@ -1002,27 +1056,32 @@ function error(txt) {
 }
 function limpiarError() { document.getElementById('msgError').className = 'msg'; }
 
-// Click fuera del modal
+// Click fuera del modal cierra
 document.getElementById('overlay').addEventListener('click', function(e) {
   if (e.target === this) cerrarModal();
 });
 
-// Al enviar por WhatsApp, limpiar formulario
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('btnWsp').addEventListener('click', () => {
-    setTimeout(() => {
-      document.getElementById('overlay').classList.remove('show');
-      document.getElementById('nombre').value = '';
-      document.getElementById('telefono').value = '';
-      document.getElementById('obraInput').value = '';
-      document.querySelectorAll('.obra-tag').forEach(t => t.classList.remove('selected'));
-      document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'));
-      medicoSel = null; horaSel = null;
-      renderHoras();
-    }, 600);
-  });
-  init();
+// Al enviar WhatsApp limpiar formulario
+document.getElementById('btnWsp').addEventListener('click', () => {
+  setTimeout(() => {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('nombre').value = '';
+    document.getElementById('telefono').value = '';
+    document.getElementById('obraInput').value = '';
+    document.querySelectorAll('.obra-tag').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'));
+    medicoSel = null;
+    horaSel = null;
+    turnosOcupados = {};
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    document.getElementById('horariosGrid').innerHTML = `<div class="placeholder-msg">Seleccioná primero un médico y una fecha para ver los horarios disponibles.</div>`;
+  }, 600);
 });
+
+// Exponer confirmar globalmente
+window.confirmar = confirmar;
+
+init();
 </script>
 </body>
 </html>
